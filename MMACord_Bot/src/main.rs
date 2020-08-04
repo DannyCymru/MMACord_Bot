@@ -18,6 +18,7 @@ use log::{error, info};
 
 use commands::{
     meta::*,
+    decision::*
 };
 struct ShardManagerContainer;
 
@@ -38,7 +39,7 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(ping)]
+#[commands(ping, decision)]
 struct General;
 
 fn main() {
@@ -76,7 +77,7 @@ fn main() {
         .configure(|c| c
         	.with_whitespace(true)
             .owners(owners)
-        	.prefix("fucking"))
+        	.prefix("~"))
         .group(&GENERAL_GROUP));
 
     if let Err(why) = client.start() {
