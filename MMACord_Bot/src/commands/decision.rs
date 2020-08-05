@@ -21,7 +21,7 @@ fn decision(ctx: &mut Context, msg: &Message) -> CommandResult {
 
 		let f2 = name_vec[3].to_owned() + " " + &name_vec[4];
 
-		let _fight_search = fight_check(f1, f2);
+		let _fight_search = fight_checks(f1, f2);
 
 		let _ = msg.channel_id.say(&ctx.http, "fight");
 
@@ -34,6 +34,7 @@ fn decision(ctx: &mut Context, msg: &Message) -> CommandResult {
     Ok(())
 }
 
+//Grabs the names from the user input
 fn names(mut content: String) -> std::vec::Vec<String> {
 	
 	//Used to remove the box command prefix
@@ -51,6 +52,7 @@ fn names(mut content: String) -> std::vec::Vec<String> {
 	return name_vec;
 }
 
+//Scrapes web pages for links
 fn link_scrape(url: String) -> std::vec::Vec<String>{
 
 	//Sets up http client
@@ -74,6 +76,7 @@ fn link_scrape(url: String) -> std::vec::Vec<String>{
 	return results;
 }
 
+//Obtains the fighters specific URL pages
 fn fighter_url(fighter: String) -> String{
 	
 	//Search url
@@ -97,7 +100,31 @@ fn fighter_url(fighter: String) -> String{
 	return result;
 }
 
-fn fight_check(f1: String, f2: String) -> String{
+//Loops through vectors to help determine if two fighters have fought
+//and reduce code duplication
+fn fight_loop(f_links: Vec<String>, f2: String) -> String{
+
+	let mut result = String::new();
+
+	for n in f_links {
+		if n.contains(&f2.replace(" ", "-")){
+			result = n.clone();
+			println!("{:?}", n);
+			break;
+		}
+		else{
+			println!("They have not fought");
+
+			result = "Fight does not exist".to_string();
+		}
+	}
+
+	return result;
+}
+
+//Checks to make sure the fighters exist, the correct fighters data has been obtained
+//and if they have fought
+fn fight_checks(f1: String, f2: String) -> String{
 	
 	//Urls for both fighters provided
 	let url_1 = fighter_url(f1.clone());
@@ -122,23 +149,24 @@ fn fight_check(f1: String, f2: String) -> String{
 		println!("{:?}", result);
 	}
 
-	else{
+	else if url_1 != failure && url_2 != failure {
 		
-		let results = link_scrape(url_1);
+		let mut links = link_scrape(url_1);
+		
+		let check = fight_loop(links, f2);
 
-		//For loop to look through the results till we get a fighter page
-		for n in results{
-			//Returns the fight url
-			if n.contains(&f2.replace(" ", "-")){
-				result = n.clone();
-				println!("{:?}", n);
-				break;
-			}
-			else {
-				result = 'f'.to_string();
-				println!("Fail");
-			}
+		if check == "Fight does not exist".to_string() {
+			links = link_scrape(url_2);
+			result = fight_loop(links, f1);
 		}
-	}	
+		else{
+			result = check;
+		}
+	}
+
+	else {
+		println!("complete failure");
+	}
+
 	return result;
 }
