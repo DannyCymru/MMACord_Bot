@@ -15,12 +15,14 @@ fn decision(ctx: &mut Context, msg: &Message) -> CommandResult {
 	
 	let name_vec: Vec<String> = names((*msg.content).to_string());
 
-	let fighter_1 = name_vec[0].to_owned() + "+" + &name_vec[1];
+	let fighter_1 = name_vec[0].to_owned() + " " + &name_vec[1];
 
-	let fighter_2 = name_vec[3].to_owned() + "+" + &name_vec[4];
+	let fighter_2 = name_vec[3].to_owned() + " " + &name_vec[4];
 
-	fighter_search(fighter_1, fighter_2);
-
+	let f1_url = fighter_url(fighter_1);
+	let f2_url = fighter_url(fighter_2);
+	println!("F1: {}", f1_url);
+	println!("F2: {}", f2_url);
     let _ = msg.channel_id.say(&ctx.http, "Decision");
 
     Ok(())
@@ -43,7 +45,7 @@ fn names(mut content: String) -> std::vec::Vec<String> {
 	return name_vec;
 }
 
-fn fighter_search(fighter_1: String, fighter_2: String){
+fn fighter_url(fighter: String) -> String{
 
 	//Sets up http client
 	let client = reqwest::blocking::Client::new();
@@ -51,17 +53,26 @@ fn fighter_search(fighter_1: String, fighter_2: String){
 	//Base search url
 	let origin_url = "http://www.mmadecisions.com/search?s=";
 	
-	//Search url for the first fighter user specified
-	let fighter_1_se = origin_url.to_owned() + &fighter_1;
-	let res = client.get(&fighter_1_se).send().unwrap();
+	//Search url for the fighter user specified
+	let fighter_se = origin_url.to_owned() + &fighter.replace(" ", "+");
+	let res = client.get(&fighter_se).send().unwrap();
 
-	//Checks the page status eg 200 or 404
-	println!("Status for {}: {}", &fighter_1_se, res.status());
+	//Returns status for thge requested page
+	println!("Status for {}: {}", &fighter_se, res.status());
 
-	//Webpage scrape
-	Document::from_read(res)
-		.unwrap()
-		.find(Name("a"))
-		.filter_map(|n| n.attr("href"))
-		.for_each(|x| println!("{}", x));
+	let webpage = Document::from_read(res).unwrap();
+
+	//Webpage scrape for all linls
+	let results: Vec<_> = webpage
+							.find(Name("a"))
+							.filter_map(|n| n.attr("href"))
+							.collect();
+
+	let mut f_url = String::new();
+	for n in results{
+		if n.starts_with("fighter"){
+			f_url = "http://www.mmadecisions.com/".to_owned() + &n.to_string();
+		}
+	}
+	return f_url;
 }
