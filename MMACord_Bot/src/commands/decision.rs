@@ -99,23 +99,43 @@ fn fighter_url(fighter: String) -> String{
 
 fn fight_check(f1: String, f2: String) -> String{
 	
-	let url = fighter_url(f1);
+	//Urls for both fighters provided
+	let url_1 = fighter_url(f1.clone());
+	let url_2 = fighter_url(f2.clone());
+	
 	let mut result = String::new();
 
-	if url == "No fighter found" {
-		result = "First fighter not found".to_string();
+	//Failure state
+	let failure = "No fighter found";
+
+	//Checks if either URL scrape fails
+	if url_1 == failure && url_2 == failure {
+		result = "Fighters not found".to_string();
 	}
-	else {
+	else if url_1 != failure && url_2 == failure {
+		result = "Fighter ".to_owned() + &f2 + " not found";
+		println!("{:?}", result);
+	}
+
+	else if url_2 != failure && url_1 == failure {
+		result = "Fighter ".to_owned() + &f1 + " not found";
+		println!("{:?}", result);
+	}
+
+	else{
 		
-		let results = link_scrape(url);
+		let results = link_scrape(url_1);
 
 		//For loop to look through the results till we get a fighter page
 		for n in results{
+			//Returns the fight url
 			if n.contains(&f2.replace(" ", "-")){
+				result = n.clone();
 				println!("{:?}", n);
 				break;
 			}
 			else {
+				result = 'f'.to_string();
 				println!("Fail");
 			}
 		}
