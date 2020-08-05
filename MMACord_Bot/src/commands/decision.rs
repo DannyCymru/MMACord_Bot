@@ -15,15 +15,21 @@ fn decision(ctx: &mut Context, msg: &Message) -> CommandResult {
 	
 	let name_vec: Vec<String> = names((*msg.content).to_string());
 
-	let fighter_1 = name_vec[0].to_owned() + " " + &name_vec[1];
+	//Check to make sure that you insert the correct amount of inputs
+	if name_vec.len() == 5{
+		let f1 = name_vec[0].to_owned() + " " + &name_vec[1];
 
-	let fighter_2 = name_vec[3].to_owned() + " " + &name_vec[4];
+		let f2 = name_vec[3].to_owned() + " " + &name_vec[4];
 
-	let f1_url = fighter_url(fighter_1);
-	let f2_url = fighter_url(fighter_2);
-	println!("F1: {}", f1_url);
-	println!("F2: {}", f2_url);
-    let _ = msg.channel_id.say(&ctx.http, "Decision");
+		let _fight_search = fight_check(f1, f2);
+
+		let _ = msg.channel_id.say(&ctx.http, "fight");
+
+	}
+	else {
+		 let _ = msg.channel_id.say(&ctx.http, "You must only enter a fighters first and second name");
+	}
+
 
     Ok(())
 }
@@ -45,34 +51,74 @@ fn names(mut content: String) -> std::vec::Vec<String> {
 	return name_vec;
 }
 
-fn fighter_url(fighter: String) -> String{
+fn link_scrape(url: String) -> std::vec::Vec<String>{
 
 	//Sets up http client
 	let client = reqwest::blocking::Client::new();
 
-	//Base search url
-	let origin_url = "http://www.mmadecisions.com/search?s=";
-	
-	//Search url for the fighter user specified
-	let fighter_se = origin_url.to_owned() + &fighter.replace(" ", "+");
-	let res = client.get(&fighter_se).send().unwrap();
+	let res = client.get(&url).send().unwrap();
 
-	//Returns status for thge requested page
-	println!("Status for {}: {}", &fighter_se, res.status());
+	println!("Status for {}: {}", &url, res.status());
 
 	let webpage = Document::from_read(res).unwrap();
 
-	//Webpage scrape for all linls
-	let results: Vec<_> = webpage
+	//Webpage scrape for all links
+	let results: Vec<String> = webpage
 							.find(Name("a"))
 							.filter_map(|n| n.attr("href"))
+							.map(str::to_string)
 							.collect();
 
-	let mut f_url = String::new();
+	println!("{:?}", results);
+
+	return results;
+}
+
+fn fighter_url(fighter: String) -> String{
+	
+	//Search url
+	let url = "http://www.mmadecisions.com/search?s=".to_owned() + &fighter.replace(" ", "+");
+
+	//Vector of links scraped
+	let results = link_scrape(url);
+
+	let mut result = String::new();
+
+	//For loop to look through the results till we get a fighter page
 	for n in results{
 		if n.starts_with("fighter"){
-			f_url = "http://www.mmadecisions.com/".to_owned() + &n.to_string();
+			result = "http://www.mmadecisions.com/".to_owned() + &n.to_string();
+			break;
+		}
+		else {
+			result = "No fighter found".to_string();
 		}
 	}
-	return f_url;
+	return result;
+}
+
+fn fight_check(f1: String, f2: String) -> String{
+	
+	let url = fighter_url(f1);
+	let mut result = String::new();
+
+	if url == "No fighter found" {
+		result = "First fighter not found".to_string();
+	}
+	else {
+		
+		let results = link_scrape(url);
+
+		//For loop to look through the results till we get a fighter page
+		for n in results{
+			if n.contains(&f2.replace(" ", "-")){
+				println!("{:?}", n);
+				break;
+			}
+			else {
+				println!("Fail");
+			}
+		}
+	}	
+	return result;
 }
