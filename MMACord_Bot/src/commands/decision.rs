@@ -21,10 +21,21 @@ fn decision(ctx: &mut Context, msg: &Message) -> CommandResult {
 
 		let f2 = name_vec[3].to_owned() + " " + &name_vec[4];
 
-		let _fight_search = fight_checks(f1, f2);
+		let fight_search = fight_url(f1, f2);
 
-		let _ = msg.channel_id.say(&ctx.http, "fight");
+		if fight_search == "Fight does not exist"{
+			let _ = msg.channel_id.say(&ctx.http, "Fight does not exist");
+		}
 
+		else {
+
+			let round = fight_scrape(fight_search, "round".to_string());
+
+			for x in round{
+				println!("{:?}", x);
+			}
+		}		
+		
 	}
 	else {
 		 let _ = msg.channel_id.say(&ctx.http, "You must only enter a fighters first and second name");
@@ -122,9 +133,8 @@ fn fight_loop(f_links: Vec<String>, f2: String) -> String{
 	return result;
 }
 
-//Checks to make sure the fighters exist, the correct fighters data has been obtained
-//and if they have fought
-fn fight_checks(f1: String, f2: String) -> String{
+//Scrapes pages for a matching fight
+fn fight_url(f1: String, f2: String) -> String{
 	
 	//Urls for both fighters provided
 	let url_1 = fighter_url(f1.clone());
@@ -149,12 +159,16 @@ fn fight_checks(f1: String, f2: String) -> String{
 		println!("{:?}", result);
 	}
 
+	//If both fighters exist
 	else if url_1 != failure && url_2 != failure {
 		
+		//Scrape the first fight
 		let mut links = link_scrape(url_1);
 		
+		//Check if F1 and F2 have fought
 		let check = fight_loop(links, f2);
 
+		//If it fails, scrape F2's links and check for the fight
 		if check == "Fight does not exist".to_string() {
 			links = link_scrape(url_2);
 			result = fight_loop(links, f1);
@@ -166,7 +180,104 @@ fn fight_checks(f1: String, f2: String) -> String{
 
 	else {
 		println!("complete failure");
+		result = "Fight does not exist".to_string();
 	}
 
 	return result;
+}
+
+
+fn fight_scrape(fight_url: String, dtype: String ) -> Vec<i32>{
+	
+	//Sets up http client
+	let client = reqwest::blocking::Client::new();
+
+	let fight_url = "http://www.mmadecisions.com/".to_owned() + &fight_url;
+	
+	let res = client.get(&fight_url).send().unwrap();
+
+	let webpage = Document::from_read(res).unwrap();
+
+	let mut data: Vec<i32> = Vec::new();
+
+	//Scrapes for the information we would like
+	for n in webpage.find(Class("decision")){
+		
+		let mut results: Vec<String> = n.find(Class("list")).map(|n| n.text()).collect();
+		
+		if dtype == "round" {
+			let new_data = round_scrape(data_check(&mut results));
+
+			for x in new_data{
+				data.push(x);
+			}
+		}
+
+		else if dtype == "score"{
+			data = score_scrape(data_check(&mut results));
+		}
+	}
+	return data;
+}
+
+//checks the webpage results so we can 
+fn data_check(scrape_data: &mut Vec<String>) -> Vec<String>{
+	
+	let mut good_data: Vec<String> = Vec::new();
+
+	//Checks scraped results
+	for x in scrape_data{
+		//or if its a long string of characters
+		if x.len() > 2 || x.len() < 1 || x.is_empty() {
+			println!("This triggered data check if: {:?}", x);
+		}
+
+		else if x.len() <= 2 {
+			let data = x.to_string();
+			good_data.push(data);
+		}
+	}
+	return good_data;
+}
+
+//Returns the round data from the fight page
+fn round_scrape(scrape_data :  Vec<String>) ->  Vec<i32> {
+	
+	let mut round: Vec<i32> = Vec::new();
+
+	println!("Scrape data: {:?}", scrape_data);
+	for n in scrape_data	{
+		let int_n = n.parse::<i32>().unwrap();
+
+		if int_n >= 1 && int_n < 6{
+			round.push(int_n);
+		}
+
+		else {
+		}
+	}
+
+	return round;
+}
+
+//Returns the score from the fight page
+fn score_scrape(scrape_data: Vec<String>) ->  Vec<i32>{
+	
+	let mut score: Vec<i32> = Vec::new();
+
+	for n in scrape_data.clone(){
+		
+		let int_n = n.parse::<i32>().unwrap();
+		
+		if int_n > 5 {
+			score.push(int_n);
+		}
+
+		else {
+			println!("{:?}",scrape_data);
+		}
+	}
+
+	println!("{}", score.len());
+	return score;
 }
