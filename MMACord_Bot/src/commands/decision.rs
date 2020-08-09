@@ -29,31 +29,28 @@ fn decision(ctx: &mut Context, msg: &Message) -> CommandResult {
 
 		else {
 
-			let fight_data: (Vec<i32>, Vec<i32>, Vec<String>) = fight_scrape(fight_search);
+			let fight_data: (Vec<String>, Vec<i32>, Vec<i32>) = fight_scrape(fight_search);
 			let mut scores = 0;
-				
-				/*for i in 0..3{
-					println!("{:?}", fight_data.2[i]);
-				}*/
+			
 
-				if fight_data.0.iter().count() % 5 == 0{
+			if fight_data.0.iter().count() % 5 == 0{
 
-					scores = 30;
-					for i in 0..5{
-						println!("Round: {:?}", fight_data.0[i]);
-					}
+				scores = 30;
+				for i in 0..5{
+					println!("Round: {:?}", fight_data.0[i]);
 				}
-				else {
-					scores = 15;
-					for i in 0..3{
-						println!("Round {:?}", fight_data.0[i]);
-					}
+			}
+			else {
+				scores = 15;
+				for i in 0..3{
+					println!("Round {:?}", fight_data.0[i]);
 				}
+			}
 
-				println!("Scores: ");
-				for x in 0..scores{
-					println!(" {}", fight_data.1[x]);
-				}
+			println!("Scores: ");
+			for x in 0..scores{
+				println!(" {}", fight_data.1[x]);
+			}
 		}
 		
 	}
@@ -207,7 +204,7 @@ fn fight_url(f1: String, f2: String) -> String{
 }
 
 
-fn fight_scrape(fight_url: String) -> (Vec<i32>, Vec<i32>, Vec<String>){
+fn fight_scrape(fight_url: String) -> (Vec<String>, Vec<i32>, Vec<i32>){
 	
 	//Sets up http client
 	let client = reqwest::blocking::Client::new();
@@ -221,6 +218,15 @@ fn fight_scrape(fight_url: String) -> (Vec<i32>, Vec<i32>, Vec<String>){
 	let mut r_data: Vec<i32> = Vec::new();
 	let mut s_data: Vec<i32> = Vec::new();
 	let mut judge_name: Vec<String> = Vec::new();
+
+	let judge: Vec<String> = webpage.find(Class("judge")).map(|n| n.text()).collect();
+	
+	for x in judge{
+		let temp_judge = x.split_whitespace();
+		for s in temp_judge{
+			judge_name.push(s.to_string());
+		}
+	}
 	
 	//Scrapes for the information we would like
 	for n in webpage.find(Class("decision")){
@@ -239,15 +245,7 @@ fn fight_scrape(fight_url: String) -> (Vec<i32>, Vec<i32>, Vec<String>){
 		}
 	}
 
-	let judge: Vec<String> = webpage.find(Class("judge")).map(|n| n.text()).collect();
-		for x in judge{
-			let temp_judge = x.split_whitespace();
-			for s in temp_judge{
-				judge_name.push(s.to_string());
-			}
-		}
-
-	 return (r_data, s_data, judge_name)
+	 return (judge_name, r_data, s_data)
 }
 
 //checks the webpage results so we can 
