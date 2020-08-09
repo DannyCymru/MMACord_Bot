@@ -1,3 +1,5 @@
+
+use prettytable::{Table, Row, Cell};
 extern crate reqwest;
 extern crate select;
 
@@ -8,12 +10,12 @@ use serenity::framework::standard::{
     macros::command,
 };
 use select::document::Document;
-use select::predicate::{Attr, Class, Name, Predicate};
+use select::predicate::{Class, Name};
 
 #[command]
 fn decision(ctx: &mut Context, msg: &Message) -> CommandResult {
 	
-	let name_vec: Vec<String> = names((*msg.content).to_string());
+	let name_vec: Vec<String> = ui_names((*msg.content).to_string());
 
 	//Check to make sure that you insert the correct amount of inputs
 	if name_vec.len() == 5{
@@ -21,7 +23,7 @@ fn decision(ctx: &mut Context, msg: &Message) -> CommandResult {
 
 		let f2 = name_vec[3].to_owned() + " " + &name_vec[4];
 
-		let fight_search = fight_url(f1, f2);
+		let fight_search = fight_url(f1.clone(), f2.clone());
 
 		if fight_search == "Fight does not exist"{
 			let _ = msg.channel_id.say(&ctx.http, "Fight does not exist");
@@ -33,29 +35,58 @@ fn decision(ctx: &mut Context, msg: &Message) -> CommandResult {
 							Vec<String>, 
 							Vec<i32>, 
 							Vec<i32>) = fight_scrape(fight_search);
-			
-			let mut scores = 0;
+			/*
+			let mut _scores = 0;
 
-			if fight_data.0.iter().count() % 5 == 0{
+			let mut table = Table::new();
 
-				scores = 30;
+			if fight_data.2.iter().count() % 5 == 0{
+
+				_scores = 30;
 				for i in 0..5{
-					println!("Round: {:?}", fight_data.1[i]);
 				}
+				
 			}
 			else {
-				scores = 15;
+				_scores = 15;
 				for i in 0..3{
-					println!("Round {:?}", fight_data.1[i]);
 				}
 			}
 
-			println!("Scores: ");
-			for x in 0..scores{
-				println!(" {}", fight_data.2[x]);
+			let mut x = 0;
+			while x < 15 {
 			}
+			*/
+		let fight = f1.to_owned() + " vs " + &f2;
+		let judge_1 = fight_data.0[0].clone() + " " + &fight_data.0[1];
+		let judge_2 = fight_data.0[2].clone() + " " + &fight_data.0[3];
+		let judge_3 = fight_data.0[4].clone() + " " + &fight_data.0[5];
+		let _ = msg.channel_id.send_message(&ctx.http, |m| {
+                m.embed(|e| {
+                    e.title(fight);
+                    e.description("From MMADecisions.com");
+                    e.fields(vec![
+                        (judge_1, "Round 1
+                        			Round 2
+                        			Round 3
+                        			", true),
+                        (judge_2, "Round 1
+                        			Round 2
+                        			Round 3
+                        			", true),
+                        (judge_3, "Round 1
+                        			Round 2
+                        			Round 3
+                        			", true)
+                    ]);
+
+                    e
+                })
+		});
+
 		}
-		
+
+
 	}
 	else {
 		 let _ = msg.channel_id.say(&ctx.http, "You must only enter a fighters first and second name");
@@ -66,7 +97,7 @@ fn decision(ctx: &mut Context, msg: &Message) -> CommandResult {
 }
 
 //Grabs the names from the user input
-fn names(mut content: String) -> std::vec::Vec<String> {
+fn ui_names(mut content: String) -> std::vec::Vec<String> {
 	
 	//Used to remove the box command prefix
 	for _n in 0..10{
@@ -234,8 +265,8 @@ fn fight_scrape(fight_url: String) -> (Vec<String>, Vec<String>, Vec<i32>, Vec<i
 
 	for i in webpage.find(Class("top-cell")){
 		let results: Vec<String> = i.find(Name("b")).map(|n| n.text()).collect();
-
-		for x in results{
+		let temp = name_scrape(results);
+		for x in temp{
 			fighter_names.push(x);
 		}
 	}
@@ -279,7 +310,7 @@ fn data_check(scrape_data: &mut Vec<String>) -> Vec<String>{
 	return good_data;
 }
 
-//Returns the round data from the fight page
+//Returns just the round data from the fight page
 fn round_scrape(scrape_data :  Vec<String>) ->  Vec<i32> {
 	
 	let mut round: Vec<i32> = Vec::new();
@@ -294,7 +325,7 @@ fn round_scrape(scrape_data :  Vec<String>) ->  Vec<i32> {
 	return round;
 }
 
-//Returns the score from the fight page
+//Returns just the wanted scores and values from the fight page
 fn score_scrape(scrape_data: Vec<String>) ->  Vec<i32>{
 	
 	let mut score: Vec<i32> = Vec::new();
@@ -309,4 +340,17 @@ fn score_scrape(scrape_data: Vec<String>) ->  Vec<i32>{
 	}
 
 	return score;
+}
+
+fn name_scrape(scrape_data: Vec<String>) -> Vec<String>{
+
+	let mut names: Vec<String> = Vec::new();
+
+	for n in scrape_data.clone(){
+
+		if !n.contains(" "){ 
+			names.push(n); 
+		}
+	}
+	return names
 }
