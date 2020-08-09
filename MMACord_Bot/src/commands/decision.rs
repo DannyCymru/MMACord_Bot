@@ -29,12 +29,34 @@ fn decision(ctx: &mut Context, msg: &Message) -> CommandResult {
 
 		else {
 
-			let round = fight_scrape(fight_search, "round".to_string());
+			let fight_data: (Vec<i32>, Vec<i32>) = fight_scrape(fight_search);
+			let mut scores = 0;
+				
+				/*for i in 0..3{
+					println!("{:?}", fight_data.2[i]);
+				}*/
 
-			for x in round{
-				println!("{:?}", x);
-			}
-		}		
+				if fight_data.0.iter().count() % 5 == 0{
+
+					scores = 30;
+					for i in 0..5{
+						println!("Round: {:?}", fight_data.0[i]);
+					}
+				}
+				else {
+					scores = 15;
+					for i in 0..3{
+						println!("Round {:?}", fight_data.0[i]);
+					}
+				}
+
+				println!("Scores: ");
+				for x in 0..scores{
+					println!(" {}", fight_data.1[x]);
+				}
+
+
+		}
 		
 	}
 	else {
@@ -187,7 +209,7 @@ fn fight_url(f1: String, f2: String) -> String{
 }
 
 
-fn fight_scrape(fight_url: String, dtype: String ) -> Vec<i32>{
+fn fight_scrape(fight_url: String) -> (Vec<i32>, Vec<i32>){
 	
 	//Sets up http client
 	let client = reqwest::blocking::Client::new();
@@ -198,26 +220,36 @@ fn fight_scrape(fight_url: String, dtype: String ) -> Vec<i32>{
 
 	let webpage = Document::from_read(res).unwrap();
 
-	let mut data: Vec<i32> = Vec::new();
-
+	let mut r_data: Vec<i32> = Vec::new();
+	let mut s_data: Vec<i32> = Vec::new();
+	let mut judge_name: Vec<String> = Vec::new();
+	
 	//Scrapes for the information we would like
 	for n in webpage.find(Class("decision")){
 		
 		let mut results: Vec<String> = n.find(Class("list")).map(|n| n.text()).collect();
+		let mut temp: Vec<i32> = round_scrape(data_check(&mut results));
 		
-		if dtype == "round" {
-			let new_data = round_scrape(data_check(&mut results));
+		for x in temp{
+			r_data.push(x);
+		}
 
-			for x in new_data{
-				data.push(x);
+		temp = score_scrape(data_check(&mut results));
+
+		for x in temp{
+			s_data.push(x);
+		}
+	}
+
+	let judge: Vec<String> = webpage.find(Class("judge")).map(|n| n.text()).collect();
+		for x in judge{
+			let temp_judge = x.split_whitespace();
+			for s in temp_judge{
+				println!("{}", s);
 			}
 		}
 
-		else if dtype == "score"{
-			data = score_scrape(data_check(&mut results));
-		}
-	}
-	return data;
+	 return (r_data, s_data)
 }
 
 //checks the webpage results so we can 
@@ -229,7 +261,6 @@ fn data_check(scrape_data: &mut Vec<String>) -> Vec<String>{
 	for x in scrape_data{
 		//or if its a long string of characters
 		if x.len() > 2 || x.len() < 1 || x.is_empty() {
-			println!("This triggered data check if: {:?}", x);
 		}
 
 		else if x.len() <= 2 {
@@ -245,18 +276,15 @@ fn round_scrape(scrape_data :  Vec<String>) ->  Vec<i32> {
 	
 	let mut round: Vec<i32> = Vec::new();
 
-	println!("Scrape data: {:?}", scrape_data);
 	for n in scrape_data	{
 		let int_n = n.parse::<i32>().unwrap();
 
-		if int_n >= 1 && int_n < 6{
+		if int_n >= 1 && int_n < 6 && int_n != 0{
 			round.push(int_n);
 		}
-
 		else {
 		}
 	}
-
 	return round;
 }
 
@@ -274,10 +302,8 @@ fn score_scrape(scrape_data: Vec<String>) ->  Vec<i32>{
 		}
 
 		else {
-			println!("{:?}",scrape_data);
 		}
 	}
 
-	println!("{}", score.len());
 	return score;
 }
