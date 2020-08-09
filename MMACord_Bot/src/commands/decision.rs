@@ -29,7 +29,7 @@ fn decision(ctx: &mut Context, msg: &Message) -> CommandResult {
 
 		else {
 
-			let fight_data: (Vec<i32>, Vec<i32>) = fight_scrape(fight_search);
+			let fight_data: (Vec<i32>, Vec<i32>, Vec<String>) = fight_scrape(fight_search);
 			let mut scores = 0;
 				
 				/*for i in 0..3{
@@ -54,8 +54,6 @@ fn decision(ctx: &mut Context, msg: &Message) -> CommandResult {
 				for x in 0..scores{
 					println!(" {}", fight_data.1[x]);
 				}
-
-
 		}
 		
 	}
@@ -209,7 +207,7 @@ fn fight_url(f1: String, f2: String) -> String{
 }
 
 
-fn fight_scrape(fight_url: String) -> (Vec<i32>, Vec<i32>){
+fn fight_scrape(fight_url: String) -> (Vec<i32>, Vec<i32>, Vec<String>){
 	
 	//Sets up http client
 	let client = reqwest::blocking::Client::new();
@@ -245,11 +243,11 @@ fn fight_scrape(fight_url: String) -> (Vec<i32>, Vec<i32>){
 		for x in judge{
 			let temp_judge = x.split_whitespace();
 			for s in temp_judge{
-				println!("{}", s);
+				judge_name.push(s.to_string());
 			}
 		}
 
-	 return (r_data, s_data)
+	 return (r_data, s_data, judge_name)
 }
 
 //checks the webpage results so we can 
@@ -282,8 +280,6 @@ fn round_scrape(scrape_data :  Vec<String>) ->  Vec<i32> {
 		if int_n >= 1 && int_n < 6 && int_n != 0{
 			round.push(int_n);
 		}
-		else {
-		}
 	}
 	return round;
 }
@@ -299,9 +295,6 @@ fn score_scrape(scrape_data: Vec<String>) ->  Vec<i32>{
 		
 		if int_n > 5 {
 			score.push(int_n);
-		}
-
-		else {
 		}
 	}
 
