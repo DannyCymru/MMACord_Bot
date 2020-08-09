@@ -1,5 +1,4 @@
 
-use prettytable::{Table, Row, Cell};
 extern crate reqwest;
 extern crate select;
 
@@ -37,8 +36,6 @@ fn decision(ctx: &mut Context, msg: &Message) -> CommandResult {
 							Vec<i32>) = fight_scrape(fight_search);
 			/*
 			let mut _scores = 0;
-
-			let mut table = Table::new();
 
 			if fight_data.2.iter().count() % 5 == 0{
 
