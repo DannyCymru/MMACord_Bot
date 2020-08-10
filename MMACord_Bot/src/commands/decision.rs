@@ -1,4 +1,3 @@
-
 extern crate reqwest;
 extern crate select;
 
@@ -34,53 +33,8 @@ fn decision(ctx: &mut Context, msg: &Message) -> CommandResult {
 							Vec<String>, 
 							Vec<i32>, 
 							Vec<i32>) = fight_scrape(fight_search);
-			/*
-			let mut _scores = 0;
 
-			if fight_data.2.iter().count() % 5 == 0{
-
-				_scores = 30;
-				for i in 0..5{
-				}
-				
-			}
-			else {
-				_scores = 15;
-				for i in 0..3{
-				}
-			}
-
-			let mut x = 0;
-			while x < 15 {
-			}
-			*/
-		let fight = f1.to_owned() + " vs " + &f2;
-		let judge_1 = fight_data.0[0].clone() + " " + &fight_data.0[1];
-		let judge_2 = fight_data.0[2].clone() + " " + &fight_data.0[3];
-		let judge_3 = fight_data.0[4].clone() + " " + &fight_data.0[5];
-		let _ = msg.channel_id.send_message(&ctx.http, |m| {
-                m.embed(|e| {
-                    e.title(fight);
-                    e.description("From MMADecisions.com");
-                    e.fields(vec![
-                        (judge_1, "Round 1
-                        			Round 2
-                        			Round 3
-                        			", true),
-                        (judge_2, "Round 1
-                        			Round 2
-                        			Round 3
-                        			", true),
-                        (judge_3, "Round 1
-                        			Round 2
-                        			Round 3
-                        			", true)
-                    ]);
-
-                    e
-                })
-		});
-
+		embed(ctx, msg, fight_data);
 		}
 
 
@@ -350,4 +304,42 @@ fn name_scrape(scrape_data: Vec<String>) -> Vec<String>{
 		}
 	}
 	return names
+}
+
+fn embed(ctx: &mut Context, msg: &Message, fight_data: (Vec<String>, Vec<String>, Vec<i32>, Vec<i32>)) {
+		
+	let judge_1 = fight_data.0[0].clone() + " " + &fight_data.0[1];
+	let judge_2 = fight_data.0[2].clone() + " " + &fight_data.0[3];
+	let judge_3 = fight_data.0[4].clone() + " " + &fight_data.0[5];
+	let title = fight_data.1[0].clone() + " vs " + &fight_data.1[1];
+	let mut rounds = String::new();
+
+	if fight_data.2.iter().count() % 3 == 0{
+		rounds = "R".to_owned()+ &fight_data.2[0].to_string() +" " + &fight_data.3[0].to_string() +"-" + &fight_data.3[1].to_string()+ "
+					R" + &fight_data.2[1].to_string() + " " + &fight_data.3[2].to_string() +"-" + &fight_data.3[3].to_string()+" 
+					R" + &fight_data.2[2].to_string() + " " + &fight_data.3[4].to_string() +"-" + &fight_data.3[5].to_string();
+	}
+
+	else if fight_data.2.iter().count() % 5 == 0 {
+		rounds = "R".to_owned()+ &fight_data.2[0].to_string() + "
+					R" + &fight_data.2[1].to_string() +" 
+					R" + &fight_data.2[2].to_string() +"
+					R" + &fight_data.2[3].to_string() +" 
+					R" + &fight_data.2[4].to_string();
+	}
+
+		let _ = msg.channel_id.send_message(&ctx.http, |m| {
+                m.embed(|e| {
+                    e.title(title);
+                    e.description("From MMADecisions.com");
+                    e.fields(vec![
+                        (judge_1, &rounds, true),
+                        (judge_2, &rounds, true),
+                        (judge_3, &rounds, true)
+                    ]);
+
+                    e
+                })
+		});	
+
 }
