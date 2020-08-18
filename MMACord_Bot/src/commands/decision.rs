@@ -30,11 +30,13 @@ fn decision(ctx: &mut Context, msg: &Message) -> CommandResult {
 		else {
 
 			let fight_data: (Vec<String>, 
+							Vec<String>,
 							Vec<String>, 
 							Vec<i32>, 
 							Vec<i32>) = fight_scrape(fight_search);
 
-		embed(ctx, msg, fight_data);
+		let fight = f1.to_owned() + " vs " + &f2;
+		embed(ctx, msg, fight, fight_data);
 		}
 
 
@@ -189,7 +191,7 @@ fn fight_url(f1: String, f2: String) -> String{
 }
 
 
-fn fight_scrape(fight_url: String) -> (Vec<String>, Vec<String>, Vec<i32>, Vec<i32>){
+fn fight_scrape(fight_url: String) -> (Vec<String>, Vec<String>, Vec<String>, Vec<i32>, Vec<i32>){
 	
 	//Sets up http client
 	let client = reqwest::blocking::Client::new();
@@ -207,39 +209,47 @@ fn fight_scrape(fight_url: String) -> (Vec<String>, Vec<String>, Vec<i32>, Vec<i
 
 	let judge: Vec<String> = webpage.find(Class("judge")).map(|n| n.text()).collect();
 	
-	for x in judge{
-		let temp_judge = x.split_whitespace();
-		for s in temp_judge{
-			judge_name.push(s.to_string());
+	for n in judge{
+		let temp_judge = n.split_whitespace();
+		for i in temp_judge{
+			judge_name.push(i.to_string());
 		}
 	}
 
-	for i in webpage.find(Class("top-cell")){
-		let results: Vec<String> = i.find(Name("b")).map(|n| n.text()).collect();
+	for n in webpage.find(Class("top-cell")){
+		let results: Vec<String> = n.find(Name("b")).map(|n| n.text()).collect();
 		let temp = name_scrape(results);
-		for x in temp{
-			fighter_names.push(x);
+		for i in temp{
+			fighter_names.push(i);
 		}
 	}
 
+	let mut offic_dec: Vec<String> = Vec::new();
+
+	for n in webpage.find(Name("tr")){
+		let results: Vec<String> = n.find(Class("event2")).map(|n| n.text()).collect();
+		for i in results{
+			offic_dec.push(i);
+		}
+	}
 	//Scrapes for the information we would like
 	for n in webpage.find(Class("decision")){
 		
 		let mut results: Vec<String> = n.find(Class("list")).map(|n| n.text()).collect();
 		let mut temp: Vec<i32> = round_scrape(data_check(&mut results));
 		
-		for x in temp{
-			r_data.push(x);
+		for n in temp{
+			r_data.push(n);
 		}
 
 		temp = score_scrape(data_check(&mut results));
 
-		for x in temp{
-			s_data.push(x);
+		for n in temp{
+			s_data.push(n);
 		}
 	}
 
-	 return (judge_name, fighter_names, r_data, s_data)
+	 return (judge_name, fighter_names, offic_dec, r_data, s_data)
 }
 
 //checks the webpage results so we can 
@@ -306,36 +316,39 @@ fn name_scrape(scrape_data: Vec<String>) -> Vec<String>{
 	return names
 }
 
-fn embed(ctx: &mut Context, msg: &Message, fight_data: (Vec<String>, Vec<String>, Vec<i32>, Vec<i32>)) {
+fn embed(ctx: &mut Context, msg: &Message, fight: String, fight_data: (Vec<String>, Vec<String>, Vec<String>, Vec<i32>, Vec<i32>)) {
 		
 	let judge_1 = fight_data.0[0].clone() + " " + &fight_data.0[1];
 	let judge_2 = fight_data.0[2].clone() + " " + &fight_data.0[3];
 	let judge_3 = fight_data.0[4].clone() + " " + &fight_data.0[5];
-	let title = fight_data.1[0].clone() + " vs " + &fight_data.1[1];
+	let scraped_fight = fight_data.1[0].clone() + " defeats " + &fight_data.1[1];
+	let offic_dec = fight_data.2[0].clone();
 	let mut rounds = String::new();
 
-	if fight_data.2.iter().count() % 3 == 0{
-		rounds = "R".to_owned()+ &fight_data.2[0].to_string() +" " + &fight_data.3[0].to_string() +"-" + &fight_data.3[1].to_string()+ "
-					R" + &fight_data.2[1].to_string() + " " + &fight_data.3[2].to_string() +"-" + &fight_data.3[3].to_string()+" 
-					R" + &fight_data.2[2].to_string() + " " + &fight_data.3[4].to_string() +"-" + &fight_data.3[5].to_string();
+	if fight_data.3.iter().count() % 3 == 0{
+		rounds = "R".to_owned()+ &fight_data.3[0].to_string() +" " + &fight_data.4[0].to_string() +"-" + &fight_data.4[1].to_string()+ "
+					R" + &fight_data.3[1].to_string() + " " + &fight_data.4[2].to_string() +"-" + &fight_data.4[3].to_string()+" 
+					R" + &fight_data.3[2].to_string() + " " + &fight_data.4[4].to_string() +"-" + &fight_data.4[5].to_string();
 	}
 
-	else if fight_data.2.iter().count() % 5 == 0 {
-		rounds = "R".to_owned()+ &fight_data.2[0].to_string() + "
-					R" + &fight_data.2[1].to_string() +" 
-					R" + &fight_data.2[2].to_string() +"
-					R" + &fight_data.2[3].to_string() +" 
-					R" + &fight_data.2[4].to_string();
+	else if fight_data.3.iter().count() % 5 == 0 {
+		rounds = "R".to_owned()+ &fight_data.3[0].to_string() +" " + &fight_data.4[0].to_string() +"-" + &fight_data.4[1].to_string()+ "
+					R" + &fight_data.3[1].to_string() + " " + &fight_data.4[2].to_string() +"-" + &fight_data.4[3].to_string()+" 
+					R" + &fight_data.3[2].to_string() + " " + &fight_data.4[4].to_string() +"-" + &fight_data.4[5].to_string()+"
+					R" + &fight_data.3[3].to_string() + " " + &fight_data.4[6].to_string() +"-" + &fight_data.4[7].to_string()+" 
+					R" + &fight_data.3[4].to_string() + " " + &fight_data.4[8].to_string() +"-" + &fight_data.4[9].to_string();
+
 	}
 
 		let _ = msg.channel_id.send_message(&ctx.http, |m| {
                 m.embed(|e| {
-                    e.title(title);
+                    e.title(fight);
                     e.description("From MMADecisions.com");
                     e.fields(vec![
-                        (judge_1, &rounds, true),
-                        (judge_2, &rounds, true),
-                        (judge_3, &rounds, true)
+                    	(&scraped_fight, &offic_dec, false),
+                        (&judge_1, &rounds, true),
+                        (&judge_2, &rounds, true),
+                        (&judge_3, &rounds, true)
                     ]);
 
                     e
