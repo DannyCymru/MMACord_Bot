@@ -17,9 +17,9 @@ fn decision(ctx: &mut Context, msg: &Message) -> CommandResult {
 
 	//Check to make sure that you insert the correct amount of inputs
 	if name_vec.len() == 5{
-		let f1 = name_vec[0].to_owned() + " " + &name_vec[1];
+		let f1 = (name_vec[0].to_owned() + " " + &name_vec[1]).to_lowercase();
 
-		let f2 = name_vec[3].to_owned() + " " + &name_vec[4];
+		let f2 = (name_vec[3].to_owned() + " " + &name_vec[4]).to_lowercase();
 
 		let fight_search = fight_url(f1.clone(), f2.clone());
 
@@ -121,7 +121,10 @@ fn fight_loop(f_links: Vec<String>, f2: String) -> String{
 
 	let mut result = String::new();
 
-	for n in f_links {
+	for mut n in f_links {
+
+		n = n.to_lowercase();
+
 		if n.contains(&f2.replace(" ", "-")){
 			result = n.clone();
 			println!("{:?}", n);
@@ -387,7 +390,7 @@ fn embed(ctx: &mut Context, msg: &Message, fight: String, fight_data: (Vec<Strin
 
 		let _ = msg.channel_id.send_message(&ctx.http, |m| {
                 m.embed(|e| {
-                    e.title(fight);
+                    e.title(fight.to_uppercase());
                     e.thumbnail("http://www.mmadecisions.com/resources/img/mmadlogo.png");
                     e.description("From MMADecisions.com");
                     e.fields(vec![
