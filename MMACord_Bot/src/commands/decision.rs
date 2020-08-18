@@ -144,7 +144,7 @@ fn fight_url(f1: String, f2: String) -> String{
 	let url_1 = fighter_url(f1.clone());
 	let url_2 = fighter_url(f2.clone());
 	
-	let mut result = String::new();
+	let result: String;
 
 	//Failure state
 	let failure = "No fighter found";
@@ -323,32 +323,78 @@ fn embed(ctx: &mut Context, msg: &Message, fight: String, fight_data: (Vec<Strin
 	let judge_3 = fight_data.0[4].clone() + " " + &fight_data.0[5];
 	let scraped_fight = fight_data.1[0].clone() + " defeats " + &fight_data.1[1];
 	let offic_dec = fight_data.2[0].clone();
-	let mut rounds = String::new();
+
+	let mut j1_rounds = String::new();
+	let mut j2_rounds = String::new();
+	let mut j3_rounds = String::new();
 
 	if fight_data.3.iter().count() % 3 == 0{
-		rounds = "R".to_owned()+ &fight_data.3[0].to_string() +" " + &fight_data.4[0].to_string() +"-" + &fight_data.4[1].to_string()+ "
-					R" + &fight_data.3[1].to_string() + " " + &fight_data.4[2].to_string() +"-" + &fight_data.4[3].to_string()+" 
-					R" + &fight_data.3[2].to_string() + " " + &fight_data.4[4].to_string() +"-" + &fight_data.4[5].to_string();
+		let j1_total = (fight_data.4[0] + fight_data.4[2] + fight_data.4[4]).to_string() + "-" + &(fight_data.4[1] + fight_data.4[3] + fight_data.4[5]).to_string();
+		let j2_total = (fight_data.4[6] + fight_data.4[8] + fight_data.4[10]).to_string() + "-" + &(fight_data.4[7] + fight_data.4[9] + fight_data.4[11]).to_string();
+		let j3_total = (fight_data.4[12] + fight_data.4[14] + fight_data.4[16]).to_string() + "-" + &(fight_data.4[13] + fight_data.4[15] + fight_data.4[17]).to_string();
+
+		j1_rounds = "R".to_owned()+ &fight_data.3[0].to_string() +": " + &fight_data.4[0].to_string() +"-" + &fight_data.4[1].to_string()+ "
+					R" + &fight_data.3[1].to_string() + ": " + &fight_data.4[2].to_string() +"-" + &fight_data.4[3].to_string()+" 
+					R" + &fight_data.3[2].to_string() + ": " + &fight_data.4[4].to_string() +"-" + &fight_data.4[5].to_string()+"
+					T: " + &j1_total;
+
+		j2_rounds = "R".to_owned()+ &fight_data.3[0].to_string() +": " + &fight_data.4[6].to_string() +"-" + &fight_data.4[7].to_string()+ "
+					R" + &fight_data.3[1].to_string() + ": " + &fight_data.4[8].to_string() +"-" + &fight_data.4[9].to_string()+" 
+					R" + &fight_data.3[2].to_string() + ": " + &fight_data.4[10].to_string() +"-" + &fight_data.4[11].to_string()+"
+					T: " + &j2_total;
+		
+		j3_rounds = "R".to_owned()+ &fight_data.3[0].to_string() +": " + &fight_data.4[0].to_string() +"-" + &fight_data.4[1].to_string()+ "
+					R" + &fight_data.3[1].to_string() + ": " + &fight_data.4[2].to_string() +"-" + &fight_data.4[3].to_string()+" 
+					R" + &fight_data.3[2].to_string() + ": " + &fight_data.4[4].to_string() +"-" + &fight_data.4[5].to_string()+"
+					T: " + &j3_total;					
 	}
 
 	else if fight_data.3.iter().count() % 5 == 0 {
-		rounds = "R".to_owned()+ &fight_data.3[0].to_string() +" " + &fight_data.4[0].to_string() +"-" + &fight_data.4[1].to_string()+ "
-					R" + &fight_data.3[1].to_string() + " " + &fight_data.4[2].to_string() +"-" + &fight_data.4[3].to_string()+" 
-					R" + &fight_data.3[2].to_string() + " " + &fight_data.4[4].to_string() +"-" + &fight_data.4[5].to_string()+"
-					R" + &fight_data.3[3].to_string() + " " + &fight_data.4[6].to_string() +"-" + &fight_data.4[7].to_string()+" 
-					R" + &fight_data.3[4].to_string() + " " + &fight_data.4[8].to_string() +"-" + &fight_data.4[9].to_string();
+		let j1_total = (fight_data.4[0] + fight_data.4[2] + fight_data.4[4] + fight_data.4[6] + fight_data.4[8]).to_string() + 
+						"-" + 
+						&(fight_data.4[1] + fight_data.4[3] + fight_data.4[5] +fight_data.4[7] + fight_data.4[9]).to_string();
 
+		let j2_total = (fight_data.4[10] + fight_data.4[12] + fight_data.4[14] + fight_data.4[16] + fight_data.4[18]).to_string() + 
+						"-" + 
+						&(fight_data.4[11] + fight_data.4[13] + fight_data.4[15] +fight_data.4[17] + fight_data.4[19]).to_string();
+
+		let j3_total = (fight_data.4[20] + fight_data.4[22] + fight_data.4[24] + fight_data.4[26] + fight_data.4[28]).to_string() + 
+						"-" + 
+						&(fight_data.4[21] + fight_data.4[23] + fight_data.4[25] +fight_data.4[27] + fight_data.4[29]).to_string();
+
+
+		j1_rounds = "R".to_owned()+ &fight_data.3[0].to_string() +": " + &fight_data.4[0].to_string() +"-" + &fight_data.4[1].to_string()+ "
+					R" + &fight_data.3[1].to_string() + ": " + &fight_data.4[2].to_string() +"-" + &fight_data.4[3].to_string()+" 
+					R" + &fight_data.3[2].to_string() + ": " + &fight_data.4[4].to_string() +"-" + &fight_data.4[5].to_string()+"
+					R" + &fight_data.3[3].to_string() + ": " + &fight_data.4[6].to_string() +"-" + &fight_data.4[7].to_string()+" 
+					R" + &fight_data.3[4].to_string() + ": " + &fight_data.4[8].to_string() +"-" + &fight_data.4[9].to_string()+"
+					T: " + &j1_total;
+
+		j2_rounds = "R".to_owned()+ &fight_data.3[0].to_string() +": " + &fight_data.4[10].to_string() +"-" + &fight_data.4[11].to_string()+ "
+					R" + &fight_data.3[1].to_string() + ": " + &fight_data.4[12].to_string() +"-" + &fight_data.4[13].to_string()+" 
+					R" + &fight_data.3[2].to_string() + ": " + &fight_data.4[14].to_string() +"-" + &fight_data.4[15].to_string()+"
+					R" + &fight_data.3[3].to_string() + ": " + &fight_data.4[16].to_string() +"-" + &fight_data.4[17].to_string()+" 
+					R" + &fight_data.3[4].to_string() + ": " + &fight_data.4[18].to_string() +"-" + &fight_data.4[19].to_string()+"
+					T: " + &j2_total;
+
+		j3_rounds = "R".to_owned()+ &fight_data.3[0].to_string() + ": " + &fight_data.4[20].to_string() +"-" + &fight_data.4[21].to_string()+ "
+					R" + &fight_data.3[1].to_string() + ": " + &fight_data.4[22].to_string() +"-" + &fight_data.4[23].to_string()+" 
+					R" + &fight_data.3[2].to_string() + ": " + &fight_data.4[24].to_string() +"-" + &fight_data.4[25].to_string()+"
+					R" + &fight_data.3[3].to_string() + ": " + &fight_data.4[26].to_string() +"-" + &fight_data.4[27].to_string()+" 
+					R" + &fight_data.3[4].to_string() + ": " + &fight_data.4[28].to_string() +"-" + &fight_data.4[29].to_string()+"
+					T: " + &j3_total;
 	}
 
 		let _ = msg.channel_id.send_message(&ctx.http, |m| {
                 m.embed(|e| {
                     e.title(fight);
+                    e.thumbnail("http://www.mmadecisions.com/resources/img/mmadlogo.png");
                     e.description("From MMADecisions.com");
                     e.fields(vec![
                     	(&scraped_fight, &offic_dec, false),
-                        (&judge_1, &rounds, true),
-                        (&judge_2, &rounds, true),
-                        (&judge_3, &rounds, true)
+                        (&judge_1, &j1_rounds, true),
+                        (&judge_2, &j2_rounds, true),
+                        (&judge_3, &j3_rounds, true)
                     ]);
 
                     e
