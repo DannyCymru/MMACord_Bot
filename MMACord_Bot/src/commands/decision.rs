@@ -1,5 +1,6 @@
 extern crate reqwest;
 extern crate select;
+extern crate serenity;
 
 use serenity::prelude::*;
 use serenity::model::prelude::*;
